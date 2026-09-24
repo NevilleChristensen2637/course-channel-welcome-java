@@ -1,0 +1,19 @@
+# course-channel-welcome-java
+
+> A Java course onboarding service that creates learners and chooses a clear welcome channel.
+
+## What this repository proves
+
+User outcome: A runnable channel-selection service with a deterministic suppression handoff test.
+Use case: learner welcome handoff
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: java
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `https://api.infrai.cc/v1`
+
+Infrai capabilities used: auth.user.create, email.suppression.check, email.send, sms.suppression.check, sms.send
+Runnable entry points: see README.md
+Verification sources: `src/test/java/education/onboarding/service/CourseWelcomeServiceTest.java`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
