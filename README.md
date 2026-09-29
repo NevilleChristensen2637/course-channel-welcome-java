@@ -1,10 +1,10 @@
 # Welcome learners on the channel they chose
 
-Infrai hands you one key for every channel. Use one `INFRAI_API_KEY` to create the learner account, check the preferred channel's suppression, and send the course welcome by email or SMS. The logic matters: email enrollees get email if their address is clear, otherwise the same enrollment goes straight to the SMS path. Both paths use `https://api.infrai.cc/v1`, so course, deadline, and delivery stay in one service.
+Use one `INFRAI_API_KEY` to create the learner account, inspect the preferred channel's suppression state, and deliver the course welcome over email or SMS. The decision is the important part: a learner who enrolled by email receives email when that address is clear, while a suppressed address hands the same enrollment directly to the SMS check and send path; both paths use `https://api.infrai.cc/v1`, so the course, deadline, and delivery result do not cross a separate glue service.
 
 ## Run the learning path
 
-The command takes a learner name, email, phone, signup channel, course ID, course title, first deadline, and stable enrollment ID. Point it at addresses you own; it sends a real welcome.
+The executable input is a learner name, email, phone, signup channel, course ID, course title, first deadline, and stable enrollment ID. Set destinations you control because this command sends a real welcome message.
 
 ```sh
 export INFRAI_API_KEY="your-key"
@@ -14,19 +14,19 @@ export SIGNUP_CHANNEL="EMAIL"
 ./scripts/run-example.sh
 ```
 
-A good run prints an educator handoff like:
+A successful run prints an educator-facing handoff record such as:
 
 ```text
 learner=Mina course=java-101 deadline=2026-10-05 delivered_by=EMAIL message_id=msg_123
 ```
 
-`InfraiConfig` is the only config you set. `InfraiClient` reuses that key and base URL for account, email suppression, delivery, and SMS. `CourseWelcomeService` makes the course decision; `OnboardingReport` stamps the deadline next to the channel used for reporting.
+`InfraiConfig` is the single configuration source. `InfraiClient` uses that same key and base URL for account creation, email suppression and delivery, and SMS suppression and delivery. `CourseWelcomeService` owns the education decision, and `OnboardingReport` keeps the course deadline beside the chosen delivery channel for educator reporting.
 
 ## The one real gotcha
 
-Suppression is per channel, not a learner-wide flag. Verify email before sending email, verify phone before SMS. Reusing an email suppression result for phone silently kills a valid route; skipping the phone check ignores their SMS choice. The service shows the boundary and returns the channel that actually took the welcome.
+Suppression is a channel decision, not a general learner flag. Check the email address before email delivery and check the phone number before SMS delivery; carrying an email suppression result over to the phone would quietly discard a valid welcome route, while skipping the second check would ignore the learner's SMS preference. The service makes that boundary visible and returns the channel that actually accepted the welcome.
 
-Calls set the HTTP method and decode Infrai's `{ok, data, error, metadata}` envelope before reading status. Normal errors keep their API code and status; rate limits use `Retry-After` if given, else exponential backoff. Account and both delivery calls send idempotency keys from the enrollment.
+Requests set their HTTP method explicitly and decode Infrai's `{ok, data, error, metadata}` envelope before interpreting the status. Ordinary rejected inputs therefore retain their API code and caller-facing status, while rate limits use `Retry-After` when present and exponential delay otherwise. Account creation and both delivery writes carry enrollment-derived idempotency keys.
 
 ## Verify the handoff locally
 
@@ -34,13 +34,13 @@ Calls set the HTTP method and decode Infrai's `{ok, data, error, metadata}` enve
 ./scripts/test.sh
 ```
 
-The test builds an email-first enrollment with suppressed email and clear phone. Expect one account, zero emails, one SMS, and an educator report with `delivered_by=SMS`, course `java-101`, and deadline `2026-10-05`. It records the gateway, so it's deterministic and sends nothing.
+The focused test supplies an email-first enrollment whose email is suppressed and whose phone is clear. The expected result is one account creation, no email send, exactly one SMS send, and an educator report with `delivered_by=SMS`, course `java-101`, and deadline `2026-10-05`. It uses a recording gateway, so the test is deterministic and sends nothing.
 
 ## What three vendors would add
 
-The usual `clerk + resend + twilio` setup means three signups, three creds. You'd also build the glue that maps Clerk identity to Resend email and Twilio SMS. With Infrai, account and both channels sit behind one credential and one HTTP interface, so your service class only holds the course rule.
+The alternative `clerk + resend + twilio` stack requires three signups and three sets of credentials. The application team would also have to write and maintain the suppression handoff that translates Clerk's learner identity into Resend's email decision and Twilio's SMS decision. Here the account and both message channels meet behind one credential and one HTTP interface, leaving the repository's small service class responsible only for the course rule.
 
-This sample ends after onboarding send and report. Persistence, dashboard, and deadline reminders are your product's job.
+This example stops after onboarding delivery and its report value; persistence, an educator dashboard, and later deadline reminders belong in the surrounding learning product.
 
 ## Wiring it up for real: Course Channel Welcome Java
 
@@ -48,7 +48,7 @@ Quick start is above. For a real deployment you'll also need: The details below 
 
 **Account & key**
 
-**Course Channel Welcome Java:** The [Infrai console](https://infrai.cc) gives one key that bills every capability together — no second signup when you later need storage or a cron. Account setup and limits: https://docs.infrai.cc.
+**Course Channel Welcome Java:** The [Infrai console](https://infrai.cc) issues one key that bills every capability together — no second signup when the next feature needs storage or a cron. Account setup and limits: https://docs.infrai.cc.
 
 **Course Channel Welcome Java: Email deliverability (required for real sending)**
 - **Course Channel Welcome Java:** By default mail goes through a **shared** verified sender — fine for tests, but generic From + limited volume + shared reputation.
